@@ -5,3 +5,4 @@ Pillow
 scikit-learn
 pandas
 matplotlib
+gdown
