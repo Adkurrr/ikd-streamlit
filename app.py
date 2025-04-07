@@ -1,30 +1,47 @@
 import streamlit as st
 import numpy as np
-from transformers import BertTokenizer, BertForSequenceClassification
 import torch
+from transformers import BertTokenizer, BertForSequenceClassification
 
-@st.cache(allow_output_mutation=True)
-def get_model():
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+# Caching model dan tokenizer
+@st.cache_resource
+def load_model():
+    tokenizer = BertTokenizer.from_pretrained("Adkurrr/ikd_streamlit")
     model = BertForSequenceClassification.from_pretrained("Adkurrr/ikd_streamlit")
-    return tokenizer,model
+    return tokenizer, model
 
+# Inisialisasi model dan tokenizer
+tokenizer, model = load_model()
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.to(device)
+model.eval()
 
-tokenizer,model = get_model()
+# UI
+st.title("Analisis Sentimen Ulasan Aplikasi IKD")
+st.write("Masukkan ulasan pengguna untuk melihat sentimennya (Positif atau Negatif)")
 
-user_input = st.text_area('Masukan ulasan :')
+user_input = st.text_area("Masukkan ulasan:")
 button = st.button("Analisa")
 
-d = {
-    
-  1:'Positif',
-  0:'Negatif'
+# Label sentimen
+sentiment_labels = {
+    1: 'Positif',
+    0: 'Negatif'
 }
 
-if user_input and button :
-    test_sample = tokenizer([user_input], padding=True, truncation=True, max_length=512,return_tensors='pt')
-    # test_sample
-    output = model(**test_sample)
-    st.write("Logits: ",output.logits)
-    y_pred = np.argmax(output.logits.detach().numpy(),axis=1)
-    st.write("Prediction: ",d[y_pred[0]])
+# Prediksi
+if user_input and button:
+    with st.spinner("Menganalisis..."):
+        # Tokenisasi dan konversi ke tensor
+        inputs = tokenizer(user_input, return_tensors="pt", truncation=True, padding=True, max_length=512)
+        inputs = {key: val.to(device) for key, val in inputs.items()}
+
+        # Inferensi
+        with torch.no_grad():
+            outputs = model(**inputs)
+
+        logits = outputs.logits
+        prediction = torch.argmax(logits, dim=1).item()
+        
+        st.success(f"Prediksi Sentimen: **{sentiment_labels[prediction]}**")
+        st.write("Logits:", logits.cpu().numpy())
