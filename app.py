@@ -1,47 +1,47 @@
 import streamlit as st
-import numpy as np
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
-from transformers import BertTokenizer, BertForSequenceClassification
+import torch.nn.functional as F
 
-# Caching model dan tokenizer
+# Load model dan tokenizer dari Hugging Face Hub
 @st.cache_resource
 def load_model():
-    tokenizer = BertTokenizer.from_pretrained("Adkurrr/ikd_streamlit")
-    model = BertForSequenceClassification.from_pretrained("Adkurrr/ikd_streamlit")
-    return tokenizer, model
+    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_sentiment_analysis")
+    tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_sentiment_analysis")
+    return model, tokenizer
 
-# Inisialisasi model dan tokenizer
-tokenizer, model = load_model()
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model.to(device)
-model.eval()
+model, tokenizer = load_model()
 
-# UI
-st.title("Analisis Sentimen Ulasan Aplikasi IKD")
-st.write("Masukkan ulasan pengguna untuk melihat sentimennya (Positif atau Negatif)")
+# Judul aplikasi
+st.title("Analisis Sentimen Ulasan IKD 🇮🇩")
+st.write("Masukkan ulasan aplikasi Identitas Kependudukan Digital untuk dianalisis sentimennya.")
 
-user_input = st.text_area("Masukkan ulasan:")
-button = st.button("Analisa")
+# Input dari pengguna
+text_input = st.text_area("Tulis ulasan di sini:")
 
-# Label sentimen
-sentiment_labels = {
-    1: 'Positif',
-    0: 'Negatif'
-}
-
-# Prediksi
-if user_input and button:
-    with st.spinner("Menganalisis..."):
-        # Tokenisasi dan konversi ke tensor
-        inputs = tokenizer(user_input, return_tensors="pt", truncation=True, padding=True, max_length=512)
-        inputs = {key: val.to(device) for key, val in inputs.items()}
-
-        # Inferensi
+# Tombol prediksi
+if st.button("Prediksi Sentimen"):
+    if text_input.strip() == "":
+        st.warning("Masukkan teks terlebih dahulu.")
+    else:
+        # Tokenisasi
+        inputs = tokenizer(text_input, return_tensors="pt", truncation=True, padding=True)
+        
+        # Prediksi
         with torch.no_grad():
             outputs = model(**inputs)
+            probs = F.softmax(outputs.logits, dim=1)
+            pred = torch.argmax(probs, dim=1).item()
+            confidence = probs[0][pred].item()
 
-        logits = outputs.logits
-        prediction = torch.argmax(logits, dim=1).item()
+        # Label sentimen (2 kelas)
+        label_map = {
+            0: "Negatif",
+            1: "Positif"
+        }
+
+        sentiment = label_map.get(pred, "Tidak diketahui")
         
-        st.success(f"Prediksi Sentimen: **{sentiment_labels[prediction]}**")
-        st.write("Logits:", logits.cpu().numpy())
+        st.subheader("Hasil Analisis")
+        st.write(f"**Sentimen:** {sentiment}")
+        st.write(f"**Kepercayaan:** {confidence * 100:.2f}%")
