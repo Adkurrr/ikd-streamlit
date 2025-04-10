@@ -4,5 +4,7 @@ torch
 Pillow
 scikit-learn
 pandas
+spacy
 matplotlib
-gdown
+sastrawi
+nltk
