@@ -3,7 +3,6 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 import torch.nn.functional as F
 import re
-import spacy
 from nltk.corpus import stopwords
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 
@@ -14,17 +13,9 @@ try:
 except LookupError:
     nltk.download('stopwords')
 
-import spacy.cli
-try:
-    nlp = spacy.load("en_core_web_sm")
-except OSError:
-    spacy.cli.download("en_core_web_sm")
-    nlp = spacy.load("en_core_web_sm")
-    
 # Inisialisasi resource
 @st.cache_resource
 def load_resources():
-    nlp = spacy.load("en_core_web_sm")
     tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_sentiment_analysis")
     model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_sentiment_analysis")
 
@@ -35,7 +26,7 @@ def load_resources():
     factory = StemmerFactory()
     stemmer = factory.create_stemmer()
 
-    return nlp, tokenizer, model, stop_words, stemmer
+    return tokenizer, model, stop_words, stemmer
 
 nlp, tokenizer, model, stop_words, stemmer = load_resources()
 
@@ -48,7 +39,8 @@ def cleansing_text(review):
     return review
 
 def tokenize_text(text):
-    return [token.text for token in nlp(text)]
+    # Gunakan tokenisasi sederhana untuk bahasa Indonesia
+    return text.split()
 
 def remove_stopwords(tokens):
     return [word for word in tokens if word not in stop_words]
