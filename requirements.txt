@@ -1,6 +1,6 @@
 streamlit
-torch
 transformers
+torch
 Pillow
 scikit-learn
 pandas
