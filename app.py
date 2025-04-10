@@ -28,7 +28,7 @@ def load_resources():
 
     return tokenizer, model, stop_words, stemmer
 
-nlp, tokenizer, model, stop_words, stemmer = load_resources()
+tokenizer, model, stop_words, stemmer = load_resources()
 
 # --- Preprocessing sesuai training ---
 def cleansing_text(review):
