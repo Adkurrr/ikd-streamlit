@@ -17,7 +17,7 @@ except LookupError:
 @st.cache_resource
 def load_resources():
     tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_sentiment_analysis")
-    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_sentiment_analysis")
+    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_sentiment_analysis_v2")
 
     stop_words = set(stopwords.words('indonesian'))
     custom_stopwords = {'nya', 'yg', 'kali', 'bgt', 'mls'}
