@@ -9,14 +9,14 @@ from huggingface_hub import hf_hub_download
 # ====== Load Models from Hugging Face Hub ======
 @st.cache_resource
 def load_bert_finetuned():
-    model = BertForSequenceClassification.from_pretrained("Adkurrr/ikd_ft_fullpreprocessing")
-    tokenizer = BertTokenizer.from_pretrained("Adkurrr/ikd_ft_fullpreprocessing")
+    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_ft_fullpreprocessing")
+    tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_ft_fullpreprocessing")
     return model, tokenizer
 
 @st.cache_resource
 def load_bert_pretrained():
-    model = BertForSequenceClassification.from_pretrained("Adkurrr/ikd_pretrained")
-    tokenizer = BertTokenizer.from_pretrained("Adkurrr/ikd_pretrained")
+    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_pretrained")
+    tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_pretrained")
     return model, tokenizer
 
 @st.cache_resource
