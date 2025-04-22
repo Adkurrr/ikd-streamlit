@@ -1,6 +1,6 @@
 import streamlit as st
 import torch
-from transformers import BertTokenizer, BertForSequenceClassification
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import joblib
 import tempfile
 import requests
