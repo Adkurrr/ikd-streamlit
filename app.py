@@ -1,90 +1,76 @@
 import streamlit as st
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
-import torch.nn.functional as F
-import re
-from nltk.corpus import stopwords
-from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
+from transformers import BertTokenizer, BertForSequenceClassification
+import joblib
+import tempfile
+import requests
+from huggingface_hub import hf_hub_download
 
-#Download fungsi yg dibutuhkan
-import nltk
-try:
-    nltk.data.find('corpora/stopwords')
-except LookupError:
-    nltk.download('stopwords')
-
-# Inisialisasi resource
+# ====== Load Models from Hugging Face Hub ======
 @st.cache_resource
-def load_resources():
-    tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_ft_fullpreprocessing")
-    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_ft_fullpreprocessing")
+def load_bert_finetuned():
+    model = BertForSequenceClassification.from_pretrained("Adkurrr/ikd_ft_fullpreprocessing")
+    tokenizer = BertTokenizer.from_pretrained("Adkurrr/ikd_ft_fullpreprocessing")
+    return model, tokenizer
 
-    stop_words = set(stopwords.words('indonesian'))
-    custom_stopwords = {'nya', 'yg', 'kali', 'bgt', 'mls'}
-    stop_words.update(custom_stopwords)
+@st.cache_resource
+def load_bert_pretrained():
+    model = BertForSequenceClassification.from_pretrained("Adkurrr/ikd_pretrained")
+    tokenizer = BertTokenizer.from_pretrained("Adkurrr/ikd_pretrained")
+    return model, tokenizer
 
-    factory = StemmerFactory()
-    stemmer = factory.create_stemmer()
+@st.cache_resource
+def load_lr_model():
+    # Download file Logistic Regression dari repo HF
+    file_path = hf_hub_download(repo_id="Adkurrr/LogisticRegression_and_SVM", filename="lr_model.pkl")
+    return joblib.load(file_path)
 
-    return tokenizer, model, stop_words, stemmer
+@st.cache_resource
+def load_svm_model():
+    # Download file SVM dari repo HF
+    file_path = hf_hub_download(repo_id="Adkurrr/LogisticRegression_and_SVM", filename="svm_model.pkl")
+    return joblib.load(file_path)
 
-tokenizer, model, stop_words, stemmer = load_resources()
+# ====== Predict Functions ======
+def predict_with_bert(text, model, tokenizer):
+    model.eval()
+    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
+    with torch.no_grad():
+        outputs = model(**inputs)
+        probs = torch.softmax(outputs.logits, dim=1).squeeze()
+        pred = torch.argmax(probs).item()
+    return pred, probs.numpy()
 
-# --- Preprocessing sesuai training ---
-def cleansing_text(review):
-    if not isinstance(review, str):
-        return ""
-    review = review.lower()
-    review = re.sub(r'[^a-zA-Z\s]', '', review)
-    return review
+def predict_with_model(text, model):
+    return model.predict([text])[0]
 
-def tokenize_text(text):
-    # Gunakan tokenisasi sederhana untuk bahasa Indonesia
-    return text.split()
+# ====== UI Streamlit ======
+st.title("Aplikasi Analisis Sentimen IKD 🇮🇩")
+st.write("Masukkan ulasan, pilih model, dan lihat prediksi sentimennya!")
 
-def remove_stopwords(tokens):
-    return [word for word in tokens if word not in stop_words]
+text_input = st.text_area("📝 Masukkan ulasan:", "")
+model_choice = st.selectbox("🧠 Pilih Model", [
+    "BERT Finetuned", "BERT Pretrained", "Logistic Regression", "SVM"
+])
 
-def stemming_tokens(tokens):
-    return [stemmer.stem(token) for token in tokens]
-
-def preprocess_input(text):
-    clean = cleansing_text(text)
-    tokens = tokenize_text(clean)
-    tokens_no_stopword = remove_stopwords(tokens)
-    stemmed_tokens = stemming_tokens(tokens_no_stopword)
-    return " ".join(stemmed_tokens)
-
-# --- Streamlit UI ---
-st.title("Analisis Sentimen Ulasan IKD 🇮🇩")
-st.write("Masukkan ulasan aplikasi Identitas Kependudukan Digital untuk dianalisis sentimennya.")
-
-text_input = st.text_area("Tulis ulasan di sini:")
-
-if st.button("Prediksi Sentimen"):
-    if text_input.strip() == "":
-        st.warning("Masukkan teks terlebih dahulu.")
+if st.button("🔍 Prediksi Sentimen"):
+    if not text_input.strip():
+        st.warning("⚠️ Silakan isi ulasan terlebih dahulu.")
     else:
-        # Preprocess dulu
-        preprocessed_text = preprocess_input(text_input)
+        if model_choice == "BERT Finetuned":
+            model, tokenizer = load_bert_finetuned()
+            label, probs = predict_with_bert(text_input, model, tokenizer)
+        elif model_choice == "BERT Pretrained":
+            model, tokenizer = load_bert_pretrained()
+            label, probs = predict_with_bert(text_input, model, tokenizer)
+        elif model_choice == "Logistic Regression":
+            model = load_lr_model()
+            label = predict_with_model(text_input, model)
+        elif model_choice == "SVM":
+            model = load_svm_model()
+            label = predict_with_model(text_input, model)
+        else:
+            label = "?"
 
-        # Tokenisasi dan prediksi
-        inputs = tokenizer(preprocessed_text, return_tensors="pt", truncation=True, padding=True)
-
-        with torch.no_grad():
-            outputs = model(**inputs)
-            probs = F.softmax(outputs.logits, dim=1)
-            pred = torch.argmax(probs, dim=1).item()
-            confidence = probs[0][pred].item()
-
-        # Mapping label: pastikan sesuai config.json
-        label_map = {
-            0: "Negatif",
-            1: "Positif"
-        }
-
-        sentiment = label_map.get(pred, "Tidak diketahui")
-        
-        st.subheader("Hasil Analisis")
-        st.write(f"**Sentimen:** {sentiment}")
-        st.write(f"**Kepercayaan:** {confidence * 100:.2f}%")
+        sentimen_label = "Positif 😄" if str(label) in ["1", "positif", "positive"] else "Negatif 😠"
+        st.success(f"✅ Prediksi Sentimen: {sentimen_label}")
