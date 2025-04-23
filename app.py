@@ -6,8 +6,16 @@ import seaborn as sns
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import joblib
 from huggingface_hub import hf_hub_download
+from PIL import Image
+import request
+from io import BytesIO
 
 # === Load Models ===
+def load_image_from_url(url):
+    response = requests.get(url)
+    return Image.open(BytesIO(response.content))
+
+
 @st.cache_resource
 def load_bert_finetuned():
     model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_ft_fullpreprocessing")
@@ -44,12 +52,12 @@ def predict_with_model(text, model):
     return model.predict([text])[0]
 
 # === Halaman Utama Streamlit ===
-st.set_page_config(page_title="Analisis Sentimen IKD", layout="wide")
+st.set_page_config(page_title="Analisis Sentimen Identitas Kependudukan Digital", layout="wide")
 
-menu = st.sidebar.radio("Navigasi", ["📊 Eksplorasi Data", "🤖 Prediksi Sentimen"])
+menu = st.sidebar.radio("Navigasi", ["Eksplorasi Data", "Prediksi Sentimen"])
 
-if menu == "📊 Eksplorasi Data":
-    st.title("Eksplorasi Dataset Ulasan IKD")
+if menu == "Eksplorasi Data":
+    st.title("Eksplorasi Dataset Ulasan Identitas Kependudukan Digital (IKD)")
 
     st.markdown("""
     Dataset yang digunakan merupakan ulasan pengguna aplikasi Identitas Kependudukan Digital (IKD) dari Google Play Store.
@@ -57,21 +65,18 @@ if menu == "📊 Eksplorasi Data":
     """)
 
     # Load dataset lokal atau Hugging Face jika perlu
-    df = pd.read_csv("ulasan_ikd_clean.csv")  # Ganti dengan path dataset kamu
+    df = pd.read_csv("https://github.com/Adkurrr/digital-residence-identity-sentiment-analysis/blob/main/Dataset/dataset%20final.xlsx?raw=True")  # Ganti dengan path dataset kamu
 
     st.subheader("Contoh Data")
-    st.dataframe(df.sample(10))
+    st.dataframe(df.sample(5))
 
-    st.subheader("Distribusi Sentimen")
-    fig, ax = plt.subplots()
-    sns.countplot(data=df, x='Sentimen', palette='Set2', ax=ax)
-    st.pyplot(fig)
+    st.subheader("Distribusi Sentimen dalam Dataset")
+    img1 = load_image_from_url("https://raw.githubusercontent.com/Adkurrr/ikd-streamlit/main/distribusi%20data.png")
+    st.image(img1, caption="Distribusi Data Sentimen")
 
-    st.subheader("Panjang Teks Ulasan")
-    df['panjang_ulasan'] = df['clean_text'].apply(lambda x: len(str(x).split()))
-    fig2, ax2 = plt.subplots()
-    sns.histplot(df['panjang_ulasan'], bins=30, kde=True, ax=ax2)
-    st.pyplot(fig2)
+    st.subheader("Wordcloud Kata-Kata Umum")
+    img2 = load_image_from_url("https://raw.githubusercontent.com/Adkurrr/ikd-streamlit/main/wordcloud.png")
+    st.image(img2, caption="Wordcloud Ulasan")
 
     st.subheader("Perbandingan Model")
     comparison_data = {
