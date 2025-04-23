@@ -65,7 +65,7 @@ if menu == "Eksplorasi Data":
     """)
 
     # Load dataset lokal atau Hugging Face jika perlu
-    df = pd.read_csv("https://github.com/Adkurrr/digital-residence-identity-sentiment-analysis/blob/main/Dataset/dataset%20final.xlsx?raw=True")  # Ganti dengan path dataset kamu
+    df = pd.read_xlsx("https://github.com/Adkurrr/digital-residence-identity-sentiment-analysis/blob/main/Dataset/dataset%20final.xlsx?raw=True")  # Ganti dengan path dataset kamu
 
     st.subheader("Contoh Data")
     st.dataframe(df.sample(5))
