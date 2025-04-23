@@ -81,24 +81,26 @@ if menu == "Eksplorasi Data":
     st.subheader("Perbandingan Model")
     comparison_data = {
         'Model': ["BERT Finetuned", "BERT Pretrained", "Logistic Regression", "SVM"],
-        'Akurasi': [0.89, 0.82, 0.79, 0.80],
-        'F1-Score': [0.89, 0.81, 0.78, 0.79]
+        'Akurasi': [0.9219, 0.4193, 0.9084, 0.9064],
+        'F1-Score': [0.9223, 0.4238, 0.9088, 0.9070],
+        'Presisi': [0.9255, 0.4335, 0.9120, 0.9113],
+        'Recall': [0.9219, 0.4193, 0.9084, 0.9064]
     }
     comparison_df = pd.DataFrame(comparison_data)
     st.table(comparison_df)
 
-elif menu == "🤖 Prediksi Sentimen":
-    st.title("Prediksi Sentimen Ulasan IKD 🇮🇩")
+elif menu == "Prediksi Sentimen":
+    st.title("Prediksi Sentimen Ulasan IKD")
     st.write("Masukkan ulasan, pilih model, dan lihat hasil prediksinya!")
 
-    text_input = st.text_area("📝 Masukkan ulasan:", "")
-    model_choice = st.selectbox("🧠 Pilih Model", [
+    text_input = st.text_area("Masukkan ulasan:", "")
+    model_choice = st.selectbox("Pilih Model", [
         "BERT Finetuned", "BERT Pretrained", "Logistic Regression", "SVM"
     ])
 
     if st.button("🔍 Prediksi Sentimen"):
         if not text_input.strip():
-            st.warning("⚠️ Silakan isi ulasan terlebih dahulu.")
+            st.warning("⚠️ Ulasan Tidak Boleh Kosong")
         else:
             if model_choice == "BERT Finetuned":
                 model, tokenizer = load_bert_finetuned()
@@ -115,5 +117,5 @@ elif menu == "🤖 Prediksi Sentimen":
             else:
                 label = "?"
 
-            sentimen_label = "Positif 😄" if str(label) in ["1", "positif", "positive"] else "Negatif 😠"
-            st.success(f"✅ Prediksi Sentimen: {sentimen_label}")
+            sentimen_label = "Positif" if str(label) in ["1", "positif", "positive"] else "Negatif"
+            st.success(f"Prediksi Sentimen: {sentimen_label}")
