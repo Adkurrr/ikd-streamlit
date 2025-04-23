@@ -7,7 +7,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import joblib
 from huggingface_hub import hf_hub_download
 from PIL import Image
-import request
+import requests
 from io import BytesIO
 
 # === Load Models ===
