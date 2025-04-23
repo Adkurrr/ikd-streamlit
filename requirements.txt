@@ -12,3 +12,4 @@ joblib
 huggingface_hub
 imblearn
 seaborn
+openpyxl
