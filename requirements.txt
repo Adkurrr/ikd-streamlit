@@ -11,3 +11,4 @@ nltk
 joblib
 huggingface_hub
 imblearn
+seaborn
