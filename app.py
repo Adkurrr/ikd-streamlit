@@ -1,32 +1,13 @@
 import streamlit as st
+import pandas as pd
 import torch
+import matplotlib.pyplot as plt
+import seaborn as sns
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import joblib
-import re
-import string
-from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
-from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from huggingface_hub import hf_hub_download
 
-# === Inisialisasi stopword remover dan stemmer
-stop_factory = StopWordRemoverFactory()
-stop_remover = stop_factory.create_stop_word_remover()
-stem_factory = StemmerFactory()
-stemmer = stem_factory.create_stemmer()
-
-# === Praproses sesuai training
-def preprocess(text):
-    text = text.lower()
-    text = re.sub(r'http\S+|www.\S+', '', text)  # hapus URL
-    text = re.sub(r'@\w+|#\w+', '', text)  # hapus mention & hashtag
-    text = re.sub(r'[%s]' % re.escape(string.punctuation), ' ', text)  # hapus tanda baca
-    text = re.sub(r'\d+', '', text)  # hapus angka
-    text = text.strip()
-    text = stop_remover.remove(text)
-    text = stemmer.stem(text)
-    return text
-
-# ====== Load Models from Hugging Face Hub ======
+# === Load Models ===
 @st.cache_resource
 def load_bert_finetuned():
     model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_ft_fullpreprocessing")
@@ -49,7 +30,7 @@ def load_svm_model():
     file_path = hf_hub_download(repo_id="Adkurrr/LogisticRegression_and_SVM", filename="svm_model.pkl")
     return joblib.load(file_path)
 
-# ====== Predict Functions ======
+# === Prediction Functions ===
 def predict_with_bert(text, model, tokenizer):
     model.eval()
     inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
@@ -60,36 +41,74 @@ def predict_with_bert(text, model, tokenizer):
     return pred, probs.numpy()
 
 def predict_with_model(text, model):
-    preprocessed = preprocess(text)
-    return model.predict([preprocessed])[0]
+    return model.predict([text])[0]
 
-# ====== UI Streamlit ======
-st.title("Aplikasi Analisis Sentimen IKD 🇮🇩")
-st.write("Masukkan ulasan, pilih model, dan lihat prediksi sentimennya!")
+# === Halaman Utama Streamlit ===
+st.set_page_config(page_title="Analisis Sentimen IKD", layout="wide")
 
-text_input = st.text_area("Masukkan ulasan:", "")
-model_choice = st.selectbox("Pilih Model", [
-    "BERT Finetuned", "BERT Pretrained", "Logistic Regression", "SVM"
-])
+menu = st.sidebar.radio("Navigasi", ["📊 Eksplorasi Data", "🤖 Prediksi Sentimen"])
 
-if st.button("🔍 Prediksi Sentimen"):
-    if not text_input.strip():
-        st.warning("Silakan isi ulasan terlebih dahulu.")
-    else:
-        if model_choice == "BERT Finetuned":
-            model, tokenizer = load_bert_finetuned()
-            label, probs = predict_with_bert(text_input, model, tokenizer)
-        elif model_choice == "BERT Pretrained":
-            model, tokenizer = load_bert_pretrained()
-            label, probs = predict_with_bert(text_input, model, tokenizer)
-        elif model_choice == "Logistic Regression":
-            model = load_lr_model()
-            label = predict_with_model(text_input, model)
-        elif model_choice == "SVM":
-            model = load_svm_model()
-            label = predict_with_model(text_input, model)
+if menu == "📊 Eksplorasi Data":
+    st.title("Eksplorasi Dataset Ulasan IKD")
+
+    st.markdown("""
+    Dataset yang digunakan merupakan ulasan pengguna aplikasi Identitas Kependudukan Digital (IKD) dari Google Play Store.
+    Data telah diproses melalui tahapan pembersihan, tokenisasi, stopwords removal, dan stemming.
+    """)
+
+    # Load dataset lokal atau Hugging Face jika perlu
+    df = pd.read_csv("ulasan_ikd_clean.csv")  # Ganti dengan path dataset kamu
+
+    st.subheader("Contoh Data")
+    st.dataframe(df.sample(10))
+
+    st.subheader("Distribusi Sentimen")
+    fig, ax = plt.subplots()
+    sns.countplot(data=df, x='Sentimen', palette='Set2', ax=ax)
+    st.pyplot(fig)
+
+    st.subheader("Panjang Teks Ulasan")
+    df['panjang_ulasan'] = df['clean_text'].apply(lambda x: len(str(x).split()))
+    fig2, ax2 = plt.subplots()
+    sns.histplot(df['panjang_ulasan'], bins=30, kde=True, ax=ax2)
+    st.pyplot(fig2)
+
+    st.subheader("Perbandingan Model")
+    comparison_data = {
+        'Model': ["BERT Finetuned", "BERT Pretrained", "Logistic Regression", "SVM"],
+        'Akurasi': [0.89, 0.82, 0.79, 0.80],
+        'F1-Score': [0.89, 0.81, 0.78, 0.79]
+    }
+    comparison_df = pd.DataFrame(comparison_data)
+    st.table(comparison_df)
+
+elif menu == "🤖 Prediksi Sentimen":
+    st.title("Prediksi Sentimen Ulasan IKD 🇮🇩")
+    st.write("Masukkan ulasan, pilih model, dan lihat hasil prediksinya!")
+
+    text_input = st.text_area("📝 Masukkan ulasan:", "")
+    model_choice = st.selectbox("🧠 Pilih Model", [
+        "BERT Finetuned", "BERT Pretrained", "Logistic Regression", "SVM"
+    ])
+
+    if st.button("🔍 Prediksi Sentimen"):
+        if not text_input.strip():
+            st.warning("⚠️ Silakan isi ulasan terlebih dahulu.")
         else:
-            label = "?"
+            if model_choice == "BERT Finetuned":
+                model, tokenizer = load_bert_finetuned()
+                label, probs = predict_with_bert(text_input, model, tokenizer)
+            elif model_choice == "BERT Pretrained":
+                model, tokenizer = load_bert_pretrained()
+                label, probs = predict_with_bert(text_input, model, tokenizer)
+            elif model_choice == "Logistic Regression":
+                model = load_lr_model()
+                label = predict_with_model(text_input, model)
+            elif model_choice == "SVM":
+                model = load_svm_model()
+                label = predict_with_model(text_input, model)
+            else:
+                label = "?"
 
-        sentimen_label = "Positif" if str(label) in ["1", "positif", "positive"] else "Negatif"
-        st.success(f"Prediksi Sentimen: {sentimen_label}")
+            sentimen_label = "Positif 😄" if str(label) in ["1", "positif", "positive"] else "Negatif 😠"
+            st.success(f"✅ Prediksi Sentimen: {sentimen_label}")
