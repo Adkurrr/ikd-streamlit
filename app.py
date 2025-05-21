@@ -65,7 +65,7 @@ if menu == "Eksplorasi Data":
     """)
 
     # Load dataset lokal atau Hugging Face jika perlu
-    df = pd.read_excel("dataset final (1).xlsx")  # Ganti dengan path dataset kamu
+    df = pd.read_excel("dataset final (1).xlsx")  
 
     st.subheader("Contoh Data")
     st.dataframe(df.sample(5))
