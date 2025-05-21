@@ -18,24 +18,24 @@ def load_image_from_url(url):
 
 @st.cache_resource
 def load_bert_finetuned():
-    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_ft_fullpreprocessing")
-    tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_ft_fullpreprocessing")
+    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_ft_fullpraproses")
+    tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_ft_fullpraproses")
     return model, tokenizer
 
 @st.cache_resource
 def load_bert_pretrained():
-    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_pretrained")
-    tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_pretrained")
+    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_pretrained_fullpraproses")
+    tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_pretrained_fullpraproses")
     return model, tokenizer
 
 @st.cache_resource
 def load_lr_model():
-    file_path = hf_hub_download(repo_id="Adkurrr/LogisticRegression_and_SVM", filename="lr_model.pkl")
+    file_path = hf_hub_download(repo_id="Adkurrr/lr-SVM-fullpraproses", filename="lr_model.pkl")
     return joblib.load(file_path)
 
 @st.cache_resource
 def load_svm_model():
-    file_path = hf_hub_download(repo_id="Adkurrr/LogisticRegression_and_SVM", filename="svm_model.pkl")
+    file_path = hf_hub_download(repo_id="Adkurrr/Lr-SVM-fullpraproses", filename="svm_model.pkl")
     return joblib.load(file_path)
 
 # === Prediction Functions ===
@@ -81,10 +81,10 @@ if menu == "Eksplorasi Data":
     st.subheader("Perbandingan Model")
     comparison_data = {
         'Model': ["BERT Finetuned", "BERT Pretrained", "Logistic Regression", "SVM"],
-        'Akurasi': [0.9219, 0.4193, 0.9084, 0.9064],
-        'F1-Score': [0.9223, 0.4238, 0.9088, 0.9070],
-        'Presisi': [0.9255, 0.4335, 0.9120, 0.9113],
-        'Recall': [0.9219, 0.4193, 0.9084, 0.9064]
+        'Akurasi': [0.95, 0.60, 0.91, 0.91],
+        'F1-Score': [0.95, 0.59, 0.91, 0.91],
+        'Presisi': [0.95, 0.59, 0.92, 0.91],
+        'Recall': [0.95, 0.60, 0.91, 0.91]
     }
     comparison_df = pd.DataFrame(comparison_data)
     st.table(comparison_df)
