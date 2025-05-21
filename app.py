@@ -117,7 +117,7 @@ elif menu == "Prediksi Sentimen":
         "BERT Finetuned", "BERT Pretrained", "Logistic Regression", "SVM"
     ])
 
-   if st.button("🔍 Prediksi Sentimen"):
+    if st.button("🔍 Prediksi Sentimen"):
         if not text_input.strip():
             st.warning("⚠️ Ulasan Tidak Boleh Kosong")
         else:
