@@ -9,7 +9,26 @@ from huggingface_hub import hf_hub_download
 from PIL import Image
 import requests
 from io import BytesIO
+import re
+from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
+from nltk.corpus import stopwords
+import nltk
 
+# === Setup Stopwords dan Stemmer ===
+nltk.download('stopwords')
+stop_words = set(stopwords.words('indonesian'))
+
+factory = StemmerFactory()
+stemmer = factory.create_stemmer()
+
+# === Fungsi Praproses Teks ===
+def preprocess_text(text):
+    text = text.lower()
+    text = re.sub(r'[^a-zA-Z\s]', ' ', text)
+    tokens = text.split()
+    cleaned = [stemmer.stem(word) for word in tokens if word not in stop_words]
+    return ' '.join(cleaned)
+    
 # === Load Models ===
 def load_image_from_url(url):
     response = requests.get(url)
@@ -91,29 +110,32 @@ if menu == "Eksplorasi Data":
 
 elif menu == "Prediksi Sentimen":
     st.title("Prediksi Sentimen Ulasan IKD")
-    st.write("Masukkan ulasan, pilih model, dan lihat hasil prediksinya!")
+    st.write("Skenario : Praproses lengkap (Cleansing, Tokenisasi, Stopwords Removal dan Stemming)")
 
     text_input = st.text_area("Masukkan ulasan:", "")
     model_choice = st.selectbox("Pilih Model", [
         "BERT Finetuned", "BERT Pretrained", "Logistic Regression", "SVM"
     ])
 
-    if st.button("🔍 Prediksi Sentimen"):
+   if st.button("🔍 Prediksi Sentimen"):
         if not text_input.strip():
             st.warning("⚠️ Ulasan Tidak Boleh Kosong")
         else:
+            # Praproses semua input sebelum diprediksi
+            processed_text = preprocess_text(text_input)
+
             if model_choice == "BERT Finetuned":
                 model, tokenizer = load_bert_finetuned()
-                label, probs = predict_with_bert(text_input, model, tokenizer)
+                label, probs = predict_with_bert(processed_text, model, tokenizer)
             elif model_choice == "BERT Pretrained":
                 model, tokenizer = load_bert_pretrained()
-                label, probs = predict_with_bert(text_input, model, tokenizer)
+                label, probs = predict_with_bert(processed_text, model, tokenizer)
             elif model_choice == "Logistic Regression":
                 model = load_lr_model()
-                label = predict_with_model(text_input, model)
+                label = predict_with_model(processed_text, model)
             elif model_choice == "SVM":
                 model = load_svm_model()
-                label = predict_with_model(text_input, model)
+                label = predict_with_model(processed_text, model)
             else:
                 label = "?"
 
