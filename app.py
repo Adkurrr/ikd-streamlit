@@ -146,7 +146,7 @@ elif menu == "Tanpa Stopword Removal dan Stemming":
             st.warning("⚠️ Ulasan Tidak Boleh Kosong")
         else:
             # Praproses semua input sebelum diprediksi
-            processed_text = preprocess_text(text_input)
+            processed_text = preprocess_woss(text_input)
 
             if model_choice == "BERT Finetuned":
                 model, tokenizer = load_bert_finetuned_s2()
