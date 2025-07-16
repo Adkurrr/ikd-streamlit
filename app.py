@@ -42,6 +42,13 @@ def preprocess_sro(text):
     tokens = text.split()  
     cleaned = [word for word in tokens if word not in stop_words]  
     return ' '.join(cleaned)
+
+def preprocess_so(text):
+    text = text.lower()
+    text = re.sub(r'[^a-zA-Z\s]', ' ', text)
+    tokens = text.split()
+    cleaned = [stemmer.stem(word) for word in tokens]
+    return ' '.join(cleaned)
  #===========================================================================================================================================   
 # === Load Models ===
 def load_image_from_url(url):
@@ -107,7 +114,28 @@ def load_lr_model_s3():
 def load_svm_model_s3():
     file_path = hf_hub_download(repo_id="Adkurrr/Lr-SVM-StopwordRemovalOnly", filename="svm_model.pkl")
     return joblib.load(file_path)
-    
+
+@st.cache_resource
+def load_bert_finetuned_s4():
+    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_ft_StemmingOnly")
+    tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_ft_StemmingOnly")
+    return model, tokenizer
+@st.cache_resource
+def load_bert_pretrained_s4():
+    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_pretrained_StemmingOnly")
+    tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_pretrained_StemmingOnly")
+    return model, tokenizer
+
+@st.cache_resource
+def load_lr_model_s4():
+    file_path = hf_hub_download(repo_id="Adkurrr/lr-SVM-StemmingOnly", filename="lr_model.pkl")
+    return joblib.load(file_path)
+
+@st.cache_resource
+def load_svm_model_s4():
+    file_path = hf_hub_download(repo_id="Adkurrr/Lr-SVM-StemmingOnly", filename="svm_model.pkl")
+    return joblib.load(file_path)
+
 # === Prediction Functions ===
 def predict_with_bert(text, model, tokenizer):
     model.eval()
@@ -227,3 +255,31 @@ elif menu == "Stopword Removal":
 elif menu == "Stemming":
     st.title("Prediksi Sentimen Ulasan IKD")
     st.write("Skenario : Stemming")
+    text_input = st.text_area("Masukkan ulasan:", "")
+    model_choice = st.selectbox("Pilih Model", [
+    "BERT Finetuned", "BERT Pretrained", "Logistic Regression", "Support Vector Machine"])
+
+    if st.button("🔍 Prediksi Sentimen"):
+        if not text_input.strip():
+            st.warning("⚠️ Ulasan Tidak Boleh Kosong")
+        else:
+            # Praproses semua input sebelum diprediksi
+            processed_text = preprocess_so(text_input)
+    
+            if model_choice == "BERT Finetuned":
+                model, tokenizer = load_bert_finetuned_s4()
+                label, probs = predict_with_bert(processed_text, model, tokenizer)
+            elif model_choice == "BERT Pretrained":
+                model, tokenizer = load_bert_pretrained_s4()
+                label, probs = predict_with_bert(processed_text, model, tokenizer)
+            elif model_choice == "Logistic Regression":
+                model = load_lr_model_s4()
+                label = predict_with_model(processed_text, model)
+            elif model_choice == "Support Vector Machine":
+                model = load_svm_model_s4()
+                label = predict_with_model(processed_text, model)
+            else:
+                label = "?"
+    
+            sentimen_label = "Positif" if str(label) in ["1", "positif", "positive"] else "Negatif"
+            st.success(f"Prediksi Sentimen: {sentimen_label}")
