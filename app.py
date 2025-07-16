@@ -40,7 +40,7 @@ def load_image_from_url(url):
 
 @st.cache_resource
 def load_bert_finetuned_s1():
-    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_ft_StopwordRemovalOnly")
+    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_ft_fullpraproses")
     tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_ft_fullpraproses")
     return model, tokenizer
 
@@ -97,16 +97,16 @@ if menu == "Stopword Removal dan Stemming":
             processed_text = preprocess_full(text_input)
 
             if model_choice == "BERT Finetuned":
-                model, tokenizer = load_bert_finetuneds_s1()
+                model, tokenizer = load_bert_finetuned_s1()
                 label, probs = predict_with_bert(processed_text, model, tokenizer)
             elif model_choice == "BERT Pretrained":
                 model, tokenizer = load_bert_pretrained_s1()
                 label, probs = predict_with_bert(processed_text, model, tokenizer)
             elif model_choice == "Logistic Regression":
-                model = load_lr_mode_sl()
+                model = load_lr_mode_s1()
                 label = predict_with_model(processed_text, model)
             elif model_choice == "SVM":
-                model = load_svm_mode_sl()
+                model = load_svm_mode_s1()
                 label = predict_with_model(processed_text, model)
             else:
                 label = "?"
