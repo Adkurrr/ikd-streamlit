@@ -166,3 +166,10 @@ elif menu == "Tanpa Stopword Removal dan Stemming":
             sentimen_label = "Positif" if str(label) in ["1", "positif", "positive"] else "Negatif"
             st.success(f"Prediksi Sentimen: {sentimen_label}")
     
+elif menu == "Stopword Removal":
+    st.title("Prediksi Sentimen Ulasan IKD")
+    st.write("Skenario : Menghapus Stopword Removal")
+    
+elif menu == "Stemming":
+    st.title("Prediksi Sentimen Ulasan IKD")
+    st.write("Skenario : Stemming")
