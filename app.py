@@ -103,10 +103,10 @@ if menu == "Stopword Removal dan Stemming":
                 model, tokenizer = load_bert_pretrained_s1()
                 label, probs = predict_with_bert(processed_text, model, tokenizer)
             elif model_choice == "Logistic Regression":
-                model = load_lr_mode_s1()
+                model = load_lr_model_s1()
                 label = predict_with_model(processed_text, model)
             elif model_choice == "SVM":
-                model = load_svm_mode_s1()
+                model = load_svm_model_s1()
                 label = predict_with_model(processed_text, model)
             else:
                 label = "?"
