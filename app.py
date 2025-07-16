@@ -86,7 +86,7 @@ if menu == "Stopword Removal dan Stemming":
 
     text_input = st.text_area("Masukkan ulasan:", "")
     model_choice = st.selectbox("Pilih Model", [
-        "BERT Finetuned", "BERT Pretrained", "Logistic Regression", "SVM"
+        "BERT Finetuned", "BERT Pretrained", "Logistic Regression", "Support Vector Machine"
     ])
 
     if st.button("🔍 Prediksi Sentimen"):
@@ -105,7 +105,7 @@ if menu == "Stopword Removal dan Stemming":
             elif model_choice == "Logistic Regression":
                 model = load_lr_model_s1()
                 label = predict_with_model(processed_text, model)
-            elif model_choice == "SVM":
+            elif model_choice == "Support Vector Machine":
                 model = load_svm_model_s1()
                 label = predict_with_model(processed_text, model)
             else:
