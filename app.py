@@ -14,6 +14,7 @@ from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from nltk.corpus import stopwords
 import nltk
 
+
 # === Setup Stopwords dan Stemmer ===
 nltk.download('stopwords')
 stop_words = set(stopwords.words('indonesian'))
@@ -21,14 +22,16 @@ stop_words = set(stopwords.words('indonesian'))
 factory = StemmerFactory()
 stemmer = factory.create_stemmer()
 
+
 # === Fungsi Praproses Teks ===
-def preprocess_text(text):
+def preprocess_full(text):
     text = text.lower()
     text = re.sub(r'[^a-zA-Z\s]', ' ', text)
     tokens = text.split()
     cleaned = [stemmer.stem(word) for word in tokens if word not in stop_words]
     return ' '.join(cleaned)
-    
+
+
 # === Load Models ===
 def load_image_from_url(url):
     response = requests.get(url)
@@ -36,26 +39,27 @@ def load_image_from_url(url):
 
 
 @st.cache_resource
-def load_bert_finetuned():
+def load_bert_finetuned_s1():
     model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_ft_StopwordRemovalOnly")
     tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_ft_fullpraproses")
     return model, tokenizer
 
 @st.cache_resource
-def load_bert_pretrained():
+def load_bert_pretrained_s1():
     model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_pretrained_fullpraproses")
     tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_pretrained_fullpraproses")
     return model, tokenizer
 
 @st.cache_resource
-def load_lr_model():
+def load_lr_model_s1():
     file_path = hf_hub_download(repo_id="Adkurrr/lr-SVM-fullpraproses", filename="lr_model.pkl")
     return joblib.load(file_path)
 
 @st.cache_resource
-def load_svm_model():
+def load_svm_model_s1():
     file_path = hf_hub_download(repo_id="Adkurrr/Lr-SVM-fullpraproses", filename="svm_model.pkl")
     return joblib.load(file_path)
+
 
 # === Prediction Functions ===
 def predict_with_bert(text, model, tokenizer):
@@ -70,45 +74,13 @@ def predict_with_bert(text, model, tokenizer):
 def predict_with_model(text, model):
     return model.predict([text])[0]
 
+
 # === Halaman Utama Streamlit ===
 st.set_page_config(page_title="Analisis Sentimen Identitas Kependudukan Digital", layout="wide")
 
-menu = st.sidebar.radio("Navigasi", ["Eksplorasi Data", "Prediksi Sentimen"])
+menu = st.sidebar.radio("Skenario", ["Stopword Removal dan Stemming", "Tanpa Stopword Removal dan Stemming", "Stopword Removal", "Stemming"])
 
-if menu == "Eksplorasi Data":
-    st.title("Eksplorasi Dataset Ulasan Identitas Kependudukan Digital (IKD)")
-
-    st.markdown("""
-    Dataset yang digunakan merupakan ulasan pengguna aplikasi Identitas Kependudukan Digital (IKD) dari Google Play Store.
-    Data telah diproses melalui tahapan pembersihan, tokenisasi, stopwords removal, dan stemming.
-    """)
-
-    # Load dataset lokal atau Hugging Face jika perlu
-    df = pd.read_excel("dataset final (1).xlsx")  
-
-    st.subheader("Contoh Data")
-    st.dataframe(df.sample(5))
-
-    st.subheader("Distribusi Sentimen dalam Dataset")
-    img1 = load_image_from_url("https://raw.githubusercontent.com/Adkurrr/ikd-streamlit/main/distribusi%20data.png")
-    st.image(img1, caption="Distribusi Data Sentimen")
-
-    st.subheader("Wordcloud Kata-Kata Umum")
-    img2 = load_image_from_url("https://raw.githubusercontent.com/Adkurrr/ikd-streamlit/main/wordcloud.png")
-    st.image(img2, caption="Wordcloud Ulasan")
-
-    st.subheader("Perbandingan Model")
-    comparison_data = {
-        'Model': ["BERT Finetuned", "BERT Pretrained", "Logistic Regression", "SVM"],
-        'Akurasi': [0.95, 0.60, 0.91, 0.91],
-        'F1-Score': [0.95, 0.59, 0.91, 0.91],
-        'Presisi': [0.95, 0.59, 0.92, 0.91],
-        'Recall': [0.95, 0.60, 0.91, 0.91]
-    }
-    comparison_df = pd.DataFrame(comparison_data)
-    st.table(comparison_df)
-
-elif menu == "Prediksi Sentimen":
+if menu == "Stopword Removal dan Stemming":
     st.title("Prediksi Sentimen Ulasan IKD")
     st.write("Skenario : Praproses lengkap (Cleansing, Tokenisasi, Stopwords Removal dan Stemming)")
 
@@ -122,22 +94,25 @@ elif menu == "Prediksi Sentimen":
             st.warning("⚠️ Ulasan Tidak Boleh Kosong")
         else:
             # Praproses semua input sebelum diprediksi
-            processed_text = preprocess_text(text_input)
+            processed_text = preprocess_full(text_input)
 
             if model_choice == "BERT Finetuned":
-                model, tokenizer = load_bert_finetuned()
+                model, tokenizer = load_bert_finetuneds_s1()
                 label, probs = predict_with_bert(processed_text, model, tokenizer)
             elif model_choice == "BERT Pretrained":
-                model, tokenizer = load_bert_pretrained()
+                model, tokenizer = load_bert_pretrained_s1()
                 label, probs = predict_with_bert(processed_text, model, tokenizer)
             elif model_choice == "Logistic Regression":
-                model = load_lr_model()
+                model = load_lr_mode_sl()
                 label = predict_with_model(processed_text, model)
             elif model_choice == "SVM":
-                model = load_svm_model()
+                model = load_svm_mode_sl()
                 label = predict_with_model(processed_text, model)
             else:
                 label = "?"
 
             sentimen_label = "Positif" if str(label) in ["1", "positif", "positive"] else "Negatif"
             st.success(f"Prediksi Sentimen: {sentimen_label}")
+
+#elif menu == "Prediksi Sentimen":
+    
