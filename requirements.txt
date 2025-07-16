@@ -2,8 +2,8 @@ streamlit
 transformers
 torch
 Pillow
-scikit-learn==1.2.2
-imbalanced-learn==0.10.1
+scikit-learn==1.6.1
+imbalanced-learn==0.13.0
 pandas
 spacy
 matplotlib
