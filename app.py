@@ -56,21 +56,21 @@ def load_image_from_url(url):
     return Image.open(BytesIO(response.content))
 @st.cache_resource
 def load_bert_finetuned_s1():
-    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_ft_fullpraproses")
-    tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_ft_fullpraproses")
+    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_ft_StopwordRemovalOnly")
+    tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_ft_StopwordRemovalOnly")
     return model, tokenizer
 @st.cache_resource
 def load_bert_pretrained_s1():
-    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_pretrained_fullpraproses")
-    tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_pretrained_fullpraproses")
+    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_pretrained_StopwordRemovalOnly")
+    tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_pretrained_StopwordRemovalOnly")
     return model, tokenizer
 @st.cache_resource
 def load_lr_model_s1():
-    file_path = hf_hub_download(repo_id="Adkurrr/lr-SVM-fullpraproses", filename="lr_model.pkl")
+    file_path = hf_hub_download(repo_id="Adkurrr/lr-SVM-StopwordRemovalOnly", filename="lr_model.pkl")
     return joblib.load(file_path)
 @st.cache_resource
 def load_svm_model_s1():
-    file_path = hf_hub_download(repo_id="Adkurrr/Lr-SVM-fullpraproses", filename="svm_model.pkl")
+    file_path = hf_hub_download(repo_id="Adkurrr/Lr-SVM-StopwordRemovalOnly", filename="svm_model.pkl")
     return joblib.load(file_path)
 
 
@@ -99,20 +99,20 @@ def load_svm_model_s2():
 @st.cache_resource
 def load_bert_finetuned_s3():
     model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_ft_fullpraproses")
-    tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_ft_StopwordRemovalOnly")
+    tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_ft_fullpraproses")
     return model, tokenizer
 @st.cache_resource
 def load_bert_pretrained_s3():
-    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_pretrained_StopwordRemovalOnly")
-    tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_pretrained_StopwordRemovalOnly")
+    model = AutoModelForSequenceClassification.from_pretrained("Adkurrr/ikd_pretrained_fullpraproses")
+    tokenizer = AutoTokenizer.from_pretrained("Adkurrr/ikd_pretrained_fullpraproses")
     return model, tokenizer
 @st.cache_resource
 def load_lr_model_s3():
-    file_path = hf_hub_download(repo_id="Adkurrr/lr-SVM-StopwordRemovalOnly", filename="lr_model.pkl")
+    file_path = hf_hub_download(repo_id="Adkurrr/lr-SVM-fullpraproses", filename="lr_model.pkl")
     return joblib.load(file_path)
 @st.cache_resource
 def load_svm_model_s3():
-    file_path = hf_hub_download(repo_id="Adkurrr/Lr-SVM-StopwordRemovalOnly", filename="svm_model.pkl")
+    file_path = hf_hub_download(repo_id="Adkurrr/Lr-SVM-fullpraproses", filename="svm_model.pkl")
     return joblib.load(file_path)
 
 @st.cache_resource
